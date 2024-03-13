@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Rinvex\Subscriptions\Concerns;
+namespace Diviky\Subscriptions\Concerns;
 
 use Carbon\Carbon;
+use Diviky\Subscriptions\Models\Plan;
+use Diviky\Subscriptions\Models\PlanSubscription;
+use Diviky\Subscriptions\Services\Period;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Rinvex\Subscriptions\Models\Plan;
-use Rinvex\Subscriptions\Models\PlanSubscription;
-use Rinvex\Subscriptions\Services\Period;
 
 trait HasPlanSubscriptions
 {

@@ -15,9 +15,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use LogicException;
-use Rinvex\Support\Concerns\HasSlug;
-use Rinvex\Support\Concerns\HasTranslations;
-use Rinvex\Support\Concerns\ValidatingTrait;
+use Rinvex\Support\Traits\HasSlug;
+use Rinvex\Support\Traits\HasTranslations;
+use Rinvex\Support\Traits\ValidatingTrait;
 use Spatie\Sluggable\SlugOptions;
 
 /**

@@ -12,7 +12,7 @@ use Diviky\Subscriptions\Models\PlanFeature;
 use Diviky\Subscriptions\Models\PlanSubscription;
 use Diviky\Subscriptions\Models\PlanSubscriptionUsage;
 use Illuminate\Support\ServiceProvider;
-use Rinvex\Support\Concerns\ConsoleTools;
+use Rinvex\Support\Traits\ConsoleTools;
 
 class SubscriptionsServiceProvider extends ServiceProvider
 {
