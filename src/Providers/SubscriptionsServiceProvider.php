@@ -11,23 +11,12 @@ use Diviky\Subscriptions\Models\Plan;
 use Diviky\Subscriptions\Models\PlanFeature;
 use Diviky\Subscriptions\Models\PlanSubscription;
 use Diviky\Subscriptions\Models\PlanSubscriptionUsage;
-use Illuminate\Support\ServiceProvider;
+use Diviky\Bright\Support\ServiceProvider;
 use Rinvex\Support\Traits\ConsoleTools;
 
 class SubscriptionsServiceProvider extends ServiceProvider
 {
     use ConsoleTools;
-
-    /**
-     * The commands to be registered.
-     *
-     * @var array
-     */
-    protected $commands = [
-        MigrateCommand::class => 'command.diviky.subscriptions.migrate',
-        PublishCommand::class => 'command.diviky.subscriptions.publish',
-        RollbackCommand::class => 'command.diviky.subscriptions.rollback',
-    ];
 
     /**
      * Register the application services.
@@ -43,9 +32,6 @@ class SubscriptionsServiceProvider extends ServiceProvider
             'diviky.subscriptions.plan_subscription' => PlanSubscription::class,
             'diviky.subscriptions.plan_subscription_usage' => PlanSubscriptionUsage::class,
         ]);
-
-        // Register console commands
-        $this->registerCommands($this->commands);
     }
 
     /**
@@ -53,9 +39,30 @@ class SubscriptionsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->console();
+        }
+
         // Publish Resources
-        $this->publishesConfig('diviky/laravel-subscriptions');
-        $this->publishesMigrations('diviky/laravel-subscriptions');
-        ! $this->autoloadMigrations('diviky/laravel-subscriptions') || $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
+    }
+
+    protected function path(): string
+    {
+        return __DIR__ . '/../..';
+    }
+
+    protected function console(): void
+    {
+        $this->publishes([
+            $this->path() . '/config/config.php' => config_path('diviky.subscriptions.php'),
+        ], 'subscriptions-config');
+
+        $this->loadMigrationsFrom($this->path().'/database/migrations');
+
+        $this->commands([
+            MigrateCommand::class,
+            PublishCommand::class,
+            RollbackCommand::class
+        ]);
     }
 }

@@ -452,28 +452,6 @@ class PlanSubscription extends Model
     }
 
     /**
-     * Determine if the feature can be used.
-     */
-    public function canUseFeature(string $featureSlug): bool
-    {
-        $featureValue = $this->getFeatureValue($featureSlug);
-        $usage = $this->usage()->byFeatureSlug($featureSlug)->first();
-
-        if ($featureValue === 'true') {
-            return true;
-        }
-
-        // If the feature value is zero, let's return false since
-        // there's no uses available. (useful to disable countable features)
-        if (! $usage || $usage->expired() || is_null($featureValue) || $featureValue === '0' || $featureValue === 'false') {
-            return false;
-        }
-
-        // Check for available uses
-        return $this->getFeatureRemainings($featureSlug) > 0;
-    }
-
-    /**
      * Get how many times the feature has been used.
      */
     public function getFeatureUsage(string $featureSlug): int
@@ -502,5 +480,209 @@ class PlanSubscription extends Model
         $feature = $this->plan->features()->where('slug', $featureSlug)->first();
 
         return $feature->value ?? null;
+    }
+
+
+    /**
+     * Determine if the subscription is active, on trial, or within its grace period.
+     *
+     * @return bool
+     */
+    public function valid()
+    {
+        return $this->active() || $this->onGracePeriod();
+    }
+
+    /**
+     * Determine if the subscription is within its grace period after cancellation.
+     *
+     * @return bool
+     */
+    public function onGracePeriod()
+    {
+        return $this->cancels_at && $this->cancels_at->isFuture();
+    }
+
+    /**
+     * Filter query by on grace period.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return void
+     */
+    public function scopeOnGracePeriod($query)
+    {
+        $query->whereNotNull('cancels_at')->where('cancels_at', '>', Carbon::now());
+    }
+
+
+    /**
+     * Determine if the subscription has a specific plan.
+     *
+     * @param  string  $plan
+     * @return bool
+     */
+    public function hasPlan($plan)
+    {
+        return $this->plan->slug == $plan ? true : false;
+    }
+
+    public function cancelled(): bool
+    {
+        return $this->canceled();
+    }
+
+    /**
+     * Determine if the subscription is recurring and not on trial.
+     *
+     * @return bool
+     */
+    public function recurring()
+    {
+        return !$this->onTrial() && !$this->cancelled();
+    }
+
+    /**
+     * Force the trial to end immediately.
+     *
+     * This method must be combined with swap, resume, etc.
+     *
+     * @return $this
+     */
+    public function skipTrial()
+    {
+        $this->trial_ends_at = null;
+
+        return $this;
+    }
+
+    public function endsInDays()
+    {
+        return Carbon::now()->diffInDays($this->ends_at);
+    }
+
+    public function trialEndsInDays()
+    {
+        return Carbon::now()->diffInDays($this->trial_ends_at);
+    }
+
+    public function hasTrial()
+    {
+        return !is_null($this->trial_ends_at);
+    }
+
+    /**
+     * Determine if the feature can be used.
+     *
+     * @param string $featureSlug
+     *
+     * @return bool
+     */
+    public function canUseFeature(string $featureSlug): bool
+    {
+        $featureValue = $this->getFeatureValue($featureSlug);
+
+        if ($featureValue === 'true') {
+            return true;
+        }
+
+        $usage = $this->usage()->byFeatureSlug($featureSlug)->first();
+        // If the feature value is zero, let's return false since
+        // there's no uses available. (useful to disable countable features)
+        if (!$usage || $usage->expired() || is_null($featureValue) || $featureValue === '0' || $featureValue === 'false') {
+            return false;
+        }
+
+        // Check for available uses
+        return $this->getFeatureRemainings($featureSlug) > 0;
+    }
+
+    /**
+     * Scope subscriptions with ended trial.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeFindEndedTrialAgo(Builder $builder, int $days = 3): Builder
+    {
+        $from = Carbon::now()->subDays($days)->startOfDay();
+        $to   = Carbon::now()->subDays($days)->endOfDay();
+
+        return $builder->whereBetween('trial_ends_at', [$from, $to]);
+    }
+
+    /**
+     * Scope subscriptions with ended trial.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeFindEndsTrialIn(Builder $builder, int $days = 3): Builder
+    {
+        $from = Carbon::now()->addDays($days)->startOfDay();
+        $to   = Carbon::now()->addDays($days)->endOfDay();
+
+        return $builder->whereBetween('trial_ends_at', [$from, $to]);
+    }
+
+    /**
+     * Scope subscriptions with ended trial.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeFindEndedAgo(Builder $builder, int $days = 3): Builder
+    {
+        $from = Carbon::now()->subDays($days)->startOfDay();
+        $to   = Carbon::now()->subDays($days)->endOfDay();
+
+        return $builder->whereBetween('ends_at', [$from, $to]);
+    }
+
+    /**
+     * Scope subscriptions with ended trial.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeFindEndsIn(Builder $builder, int $days = 3): Builder
+    {
+        $from = Carbon::now()->addDays($days)->startOfDay();
+        $to   = Carbon::now()->addDays($days)->endOfDay();
+
+        return $builder->whereBetween('ends_at', [$from, $to]);
+    }
+
+    /**
+     * Scope subscriptions with ended trial.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeFindStartedAgo(Builder $builder, int $days = 3): Builder
+    {
+        $from = Carbon::now()->subDays($days)->startOfDay();
+        $to   = Carbon::now()->subDays($days)->endOfDay();
+
+        return $builder->whereBetween('starts_at', [$from, $to]);
+    }
+
+    /**
+     * Scope subscriptions with ended trial.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeFindCreatedAgo(Builder $builder, int $days = 3): Builder
+    {
+        $from = Carbon::now()->subDays($days)->startOfDay();
+        $to   = Carbon::now()->subDays($days)->endOfDay();
+
+        return $builder->whereBetween('created_at', [$from, $to]);
     }
 }
