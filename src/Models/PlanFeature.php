@@ -6,13 +6,12 @@ namespace Diviky\Subscriptions\Models;
 
 use Carbon\Carbon;
 use Diviky\Subscriptions\Concerns\BelongsToPlan;
+use Diviky\Subscriptions\Concerns\HasSlug;
 use Diviky\Subscriptions\Services\Period;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Rinvex\Support\Traits\HasSlug;
-use Rinvex\Support\Traits\HasTranslations;
 use Rinvex\Support\Traits\ValidatingTrait;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
@@ -21,15 +20,15 @@ use Spatie\Sluggable\SlugOptions;
 /**
  * Diviky\Subscriptions\Models\PlanFeature.
  *
- * @property int                 $id
- * @property int                 $plan_id
- * @property string              $slug
- * @property array               $title
- * @property array               $description
- * @property string              $value
- * @property int                 $resettable_period
- * @property string              $resettable_interval
- * @property int                 $sort_order
+ * @property int $id
+ * @property int $plan_id
+ * @property string $slug
+ * @property array $title
+ * @property array $description
+ * @property string $value
+ * @property int $resettable_period
+ * @property string $resettable_interval
+ * @property int $sort_order
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
  * @property \Carbon\Carbon|null $deleted_at
@@ -58,7 +57,6 @@ class PlanFeature extends Model implements Sortable
     use BelongsToPlan;
     use HasFactory;
     use HasSlug;
-    use HasTranslations;
     use SoftDeletes;
     use SortableTrait;
     use ValidatingTrait;
@@ -139,8 +137,8 @@ class PlanFeature extends Model implements Sortable
     {
         $this->setTable(config('diviky.subscriptions.tables.plan_features'));
         $this->mergeRules([
-            'plan_id' => 'required|integer|exists:'.config('diviky.subscriptions.tables.plans').',id',
-            'slug' => 'required|alpha_dash|max:150|unique:'.config('diviky.subscriptions.tables.plan_features').',slug',
+            'plan_id' => 'required|integer|exists:' . config('diviky.subscriptions.tables.plans') . ',id',
+            'slug' => 'required|alpha_dash|max:150|unique:' . config('diviky.subscriptions.tables.plan_features') . ',slug',
             'name' => 'required|string|strip_tags|max:150',
             'description' => 'nullable|string|max:32768',
             'value' => 'required|string',

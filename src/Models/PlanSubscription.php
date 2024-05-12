@@ -7,6 +7,7 @@ namespace Diviky\Subscriptions\Models;
 use Carbon\Carbon;
 use DB;
 use Diviky\Subscriptions\Concerns\BelongsToPlan;
+use Diviky\Subscriptions\Concerns\HasSlug;
 use Diviky\Subscriptions\Services\Period;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,21 +16,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use LogicException;
-use Rinvex\Support\Traits\HasSlug;
-use Rinvex\Support\Traits\HasTranslations;
 use Rinvex\Support\Traits\ValidatingTrait;
 use Spatie\Sluggable\SlugOptions;
 
 /**
  * Diviky\Subscriptions\Models\PlanSubscription.
  *
- * @property int                 $id
- * @property int                 $subscriber_id
- * @property string              $subscriber_type
- * @property int                 $plan_id
- * @property string              $slug
- * @property array               $title
- * @property array               $description
+ * @property int $id
+ * @property int $subscriber_id
+ * @property string $subscriber_type
+ * @property int $plan_id
+ * @property string $slug
+ * @property array $title
+ * @property array $description
  * @property \Carbon\Carbon|null $trial_ends_at
  * @property \Carbon\Carbon|null $starts_at
  * @property \Carbon\Carbon|null $ends_at
@@ -71,7 +70,6 @@ class PlanSubscription extends Model
     use BelongsToPlan;
     use HasFactory;
     use HasSlug;
-    use HasTranslations;
     use SoftDeletes;
     use ValidatingTrait;
 
@@ -150,8 +148,8 @@ class PlanSubscription extends Model
         $this->mergeRules([
             'name' => 'required|string|strip_tags|max:150',
             'description' => 'nullable|string|max:32768',
-            'slug' => 'required|alpha_dash|max:150|unique:'.config('diviky.subscriptions.tables.plan_subscriptions').',slug',
-            'plan_id' => 'required|integer|exists:'.config('diviky.subscriptions.tables.plans').',id',
+            'slug' => 'required|alpha_dash|max:150|unique:' . config('diviky.subscriptions.tables.plan_subscriptions') . ',slug',
+            'plan_id' => 'required|integer|exists:' . config('diviky.subscriptions.tables.plans') . ',id',
             'subscriber_id' => 'required|integer',
             'subscriber_type' => 'required|string|strip_tags|max:150',
             'trial_ends_at' => 'nullable|date',
@@ -172,7 +170,7 @@ class PlanSubscription extends Model
         parent::boot();
 
         static::validating(function (self $model) {
-            if (! $model->starts_at || ! $model->ends_at) {
+            if (!$model->starts_at || !$model->ends_at) {
                 $model->setNewPeriod();
             }
         });
@@ -214,7 +212,7 @@ class PlanSubscription extends Model
      */
     public function active(): bool
     {
-        return ! $this->ended() || $this->onTrial();
+        return !$this->ended() || $this->onTrial();
     }
 
     /**
@@ -222,7 +220,7 @@ class PlanSubscription extends Model
      */
     public function inactive(): bool
     {
-        return ! $this->active();
+        return !$this->active();
     }
 
     /**
@@ -458,7 +456,7 @@ class PlanSubscription extends Model
     {
         $usage = $this->usage()->byFeatureSlug($featureSlug)->first();
 
-        return (! $usage || $usage->expired()) ? 0 : $usage->used;
+        return (!$usage || $usage->expired()) ? 0 : $usage->used;
     }
 
     /**
@@ -481,7 +479,6 @@ class PlanSubscription extends Model
 
         return $feature->value ?? null;
     }
-
 
     /**
      * Determine if the subscription is active, on trial, or within its grace period.
@@ -513,7 +510,6 @@ class PlanSubscription extends Model
     {
         $query->whereNotNull('cancels_at')->where('cancels_at', '>', Carbon::now());
     }
-
 
     /**
      * Determine if the subscription has a specific plan.
@@ -572,10 +568,6 @@ class PlanSubscription extends Model
 
     /**
      * Determine if the feature can be used.
-     *
-     * @param string $featureSlug
-     *
-     * @return bool
      */
     public function canUseFeature(string $featureSlug): bool
     {
@@ -598,90 +590,66 @@ class PlanSubscription extends Model
 
     /**
      * Scope subscriptions with ended trial.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $builder
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeFindEndedTrialAgo(Builder $builder, int $days = 3): Builder
     {
         $from = Carbon::now()->subDays($days)->startOfDay();
-        $to   = Carbon::now()->subDays($days)->endOfDay();
+        $to = Carbon::now()->subDays($days)->endOfDay();
 
         return $builder->whereBetween('trial_ends_at', [$from, $to]);
     }
 
     /**
      * Scope subscriptions with ended trial.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $builder
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeFindEndsTrialIn(Builder $builder, int $days = 3): Builder
     {
         $from = Carbon::now()->addDays($days)->startOfDay();
-        $to   = Carbon::now()->addDays($days)->endOfDay();
+        $to = Carbon::now()->addDays($days)->endOfDay();
 
         return $builder->whereBetween('trial_ends_at', [$from, $to]);
     }
 
     /**
      * Scope subscriptions with ended trial.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $builder
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeFindEndedAgo(Builder $builder, int $days = 3): Builder
     {
         $from = Carbon::now()->subDays($days)->startOfDay();
-        $to   = Carbon::now()->subDays($days)->endOfDay();
+        $to = Carbon::now()->subDays($days)->endOfDay();
 
         return $builder->whereBetween('ends_at', [$from, $to]);
     }
 
     /**
      * Scope subscriptions with ended trial.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $builder
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeFindEndsIn(Builder $builder, int $days = 3): Builder
     {
         $from = Carbon::now()->addDays($days)->startOfDay();
-        $to   = Carbon::now()->addDays($days)->endOfDay();
+        $to = Carbon::now()->addDays($days)->endOfDay();
 
         return $builder->whereBetween('ends_at', [$from, $to]);
     }
 
     /**
      * Scope subscriptions with ended trial.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $builder
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeFindStartedAgo(Builder $builder, int $days = 3): Builder
     {
         $from = Carbon::now()->subDays($days)->startOfDay();
-        $to   = Carbon::now()->subDays($days)->endOfDay();
+        $to = Carbon::now()->subDays($days)->endOfDay();
 
         return $builder->whereBetween('starts_at', [$from, $to]);
     }
 
     /**
      * Scope subscriptions with ended trial.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $builder
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeFindCreatedAgo(Builder $builder, int $days = 3): Builder
     {
         $from = Carbon::now()->subDays($days)->startOfDay();
-        $to   = Carbon::now()->subDays($days)->endOfDay();
+        $to = Carbon::now()->subDays($days)->endOfDay();
 
         return $builder->whereBetween('created_at', [$from, $to]);
     }

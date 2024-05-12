@@ -11,7 +11,6 @@ trait Subscriptions
      *
      * @param  string  $name
      * @param  \Diviky\Subscriptions\Models\Plan  $plan
-     * @return \Diviky\Subscriptions\Models\PlanSubscription
      */
     public function subscribeToPlan($plan, $name = 'default'): PlanSubscription
     {
@@ -35,11 +34,11 @@ trait Subscriptions
     {
         $subscription = $this->subscription($name);
 
-        if (! $subscription || ! $subscription->valid()) {
+        if (!$subscription || !$subscription->valid()) {
             return false;
         }
 
-        $plans = ! \is_array($plans) ? [$plans] : $plans;
+        $plans = !\is_array($plans) ? [$plans] : $plans;
 
         foreach ($plans as $plan) {
             if ($subscription->hasPlan($plan)) {
@@ -68,7 +67,7 @@ trait Subscriptions
     {
         $subscription = $this->subscription($name);
 
-        if (! $subscription || ! $subscription->onTrial()) {
+        if (!$subscription || !$subscription->onTrial()) {
             return false;
         }
 
@@ -83,7 +82,7 @@ trait Subscriptions
      */
     public function onPlan($plan)
     {
-        return ! \is_null($this->subscriptions->first(function (PlanSubscription $subscription) use ($plan) {
+        return !\is_null($this->subscriptions->first(function (PlanSubscription $subscription) use ($plan) {
             return $subscription->valid() && $subscription->hasPlan($plan);
         }));
     }
@@ -99,7 +98,7 @@ trait Subscriptions
     {
         $subscription = $this->subscription($name);
 
-        if (! $subscription || ! $subscription->valid()) {
+        if (!$subscription || !$subscription->valid()) {
             return false;
         }
 
@@ -112,8 +111,8 @@ trait Subscriptions
 
         $subscription = $this->subscription($name);
 
-        if (! $subscription) {
-            $subscription = $this->subscribeToPlan($plan, $name);
+        if (!$subscription) {
+            $subscription = $this->subscribeToPlan($plan->slug, $name);
         }
 
         return $subscription
@@ -134,7 +133,7 @@ trait Subscriptions
     {
         $subscription = $this->subscription($name);
 
-        if (! $subscription) {
+        if (!$subscription) {
             return false;
         }
 
@@ -145,7 +144,7 @@ trait Subscriptions
     {
         $subscription = $this->subscription($name);
 
-        if (! $subscription) {
+        if (!$subscription) {
             return false;
         }
 
@@ -156,7 +155,7 @@ trait Subscriptions
     {
         $subscription = $this->subscription($name);
 
-        if (! $subscription) {
+        if (!$subscription) {
             return false;
         }
 
@@ -167,7 +166,7 @@ trait Subscriptions
     {
         $subscription = $this->subscription($name);
 
-        if (! $subscription) {
+        if (!$subscription) {
             return false;
         }
 
@@ -189,7 +188,7 @@ trait Subscriptions
     {
         $subscription = $this->subscription($name);
 
-        if (! $subscription) {
+        if (!$subscription) {
             return null;
         }
 

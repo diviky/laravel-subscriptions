@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Rinvex\Support\Traits\HasSlug;
-use Rinvex\Support\Traits\HasTranslations;
+use Diviky\Subscriptions\Concerns\HasSlug;
 use Rinvex\Support\Traits\ValidatingTrait;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
@@ -18,25 +17,25 @@ use Spatie\Sluggable\SlugOptions;
 /**
  * Diviky\Subscriptions\Models\Plan.
  *
- * @property int                 $id
- * @property string              $slug
- * @property array               $name
- * @property array               $description
- * @property bool                $is_active
- * @property float               $price
- * @property float               $signup_fee
- * @property string              $currency
- * @property int                 $trial_period
- * @property string              $trial_interval
- * @property int                 $invoice_period
- * @property string              $invoice_interval
- * @property int                 $grace_period
- * @property string              $grace_interval
- * @property int                 $prorate_day
- * @property int                 $prorate_period
- * @property int                 $prorate_extend_due
- * @property int                 $active_subscribers_limit
- * @property int                 $sort_order
+ * @property int $id
+ * @property string $slug
+ * @property array $name
+ * @property array $description
+ * @property bool $is_active
+ * @property float $price
+ * @property float $signup_fee
+ * @property string $currency
+ * @property int $trial_period
+ * @property string $trial_interval
+ * @property int $invoice_period
+ * @property string $invoice_interval
+ * @property int $grace_period
+ * @property string $grace_interval
+ * @property int $prorate_day
+ * @property int $prorate_period
+ * @property int $prorate_extend_due
+ * @property int $active_subscribers_limit
+ * @property int $sort_order
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
  * @property \Carbon\Carbon|null $deleted_at
@@ -73,7 +72,6 @@ class Plan extends Model implements Sortable
 {
     use HasFactory;
     use HasSlug;
-    use HasTranslations;
     use SoftDeletes;
     use SortableTrait;
     use ValidatingTrait;
@@ -174,7 +172,7 @@ class Plan extends Model implements Sortable
     {
         $this->setTable(config('diviky.subscriptions.tables.plans'));
         $this->mergeRules([
-            'slug' => 'required|alpha_dash|max:150|unique:'.config('diviky.subscriptions.tables.plans').',slug',
+            'slug' => 'required|alpha_dash|max:150|unique:' . config('diviky.subscriptions.tables.plans') . ',slug',
             'name' => 'required|string|strip_tags|max:150',
             'description' => 'nullable|string|max:32768',
             'is_active' => 'sometimes|boolean',
